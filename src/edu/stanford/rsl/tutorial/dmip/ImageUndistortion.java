@@ -76,7 +76,7 @@ public class ImageUndistortion{
 			}
 		}
 		
-		quadraticImage.show("Quadratic Input Image");
+		quadraticImage.show("Quadratic Input Image");//Show your image in CONRAD
 		
 		
 		// 4. Generate a grid to sample the image
@@ -84,11 +84,11 @@ public class ImageUndistortion{
 		Grid2D X = new Grid2D(imSize, imSize);
 		Grid2D Y = new Grid2D(imSize, imSize);
 		
-		for(int i = 0; i < X.getWidth(); i++)
+		for(int i = 0; i < X.getWidth(); i++)// get each pixel
 		{
 			for(int j = 0; j < X.getHeight(); j++)
 			{
-				X.setAtIndex(i, j, i);
+				X.setAtIndex(i, j, i);//Why there is 3 parameters?
 				Y.setAtIndex(i, j, j);
 			}
 		}
@@ -161,13 +161,13 @@ public class ImageUndistortion{
 		// Number of lattice points
 		// TODO: define the number of lattice points
 		// change the value of nx, ny
-		int nx = 0;
-		int ny = 0;
+		int nx = 8;
+		int ny = 8;
 		
 		// step size
 		// TODO: calculate the stepsize of the lattice points 
-		float fx = 0;
-		float fy = 0;
+		float fx = imSize / nx;
+		float fy = imSize / ny;
 		
 		// Fill the distorted and undistorted lattice points with the 
 		// grid coordinates from the preprocessing part.
@@ -181,10 +181,10 @@ public class ImageUndistortion{
 			for(int j = 0; j < nx; j++)
 			{
 				//TODO: sample the distorted and undistorted grid points at the lattice points
-				// TODO
-				// TODO
-				// TODO
-				// TODO
+				Xu2.setElementValue(j, i, X.getAtIndex((int)((i+1)*fy), (int)((j+1)*fx)));
+				Yu2.setElementValue(j, i, X.getAtIndex((int)((i+1)*fy), (int)((j+1)*fx)));
+				Xd2.setElementValue(j, i, Xd.getAtIndex((int)((i+1)*fy), (int)((j+1)*fx)));
+				Yd2.setElementValue(j, i, Yd.getAtIndex((int)((i+1)*fy), (int)((j+1)*fx)));
 			}
 		}
 		
@@ -197,11 +197,11 @@ public class ImageUndistortion{
 		
 		
 		// Compute the distorted points:
-		// XD2 = XU2 + (XU2 - XD2)
-		// TODO:
-		// TODO:
-		// TODO:
-		// TODO:
+		// XD2 = XU2 + (XU2 - XD2)= 2*XU2 - XD2 to do with all the elements
+		Xd2.multipliedBy(-1);
+		Yd2.multipliedBy(-1);
+		Xd2.add(Xu2,Xu2);//Pointwise addition
+		Yd2.add(Yu2, Yu2);
 		
 		
 		// 2. Polynom of degree d
@@ -212,11 +212,11 @@ public class ImageUndistortion{
 		// d>=2: continuous non-linear curve 
 		// E.g. d=5: 4 extrema
 		// d = 10 -> NumKoeff: 66 -> but only 64 lattice points are known
-		int degree = 5; //Polynomial's degree: 2,...,10
+		int degree = 5; //Polynomial's degree: 2,...,10(The number you choose depends on how complicated your system is.Cost and benifit)
 		
 		// Number of Coefficients
 		// TODO:
-		int numCoeff = 0;
+		int numCoeff = (degree+1)*(degree+2)/2;
 		
 		// Number of Correspondences
 		// TODO:
@@ -257,20 +257,23 @@ public class ImageUndistortion{
 			{
 				for(int j = 0; j <= (degree-i); j++)
 				{
-					// TODO:
+					A.setElementValue(r, cc, Math.pow(Xu2_vec.getElement(r), i)*Math.pow(Yu2_vec.getElement(r), j));
+					cc++;
 					
 				}
 			}
 		}
 		
 		// Compute the pseudo-inverse of A with the help of the SVD (class: DecompositionSVD)
-		// TODO
-		// TODO
+		DecompositionSVD svd = new 	DecompositionSVD(A);
+		SimpleMatrix A_pseudoinverse = svd.inverse(true);
 		
 		
 		// Compute the distortion coefficients
 		// TODO
-		// TODO
+		SimpleVector u_vec = SimpleOperators.multiply(A_pseudoinverse, Xd2_vec);
+		SimpleVector v_vec = SimpleOperators.multiply(A_pseudoinverse, Yd2_vec);
+		
 		
 		
 		// 4. Compute the distorted grid points (xDist, yDist) which are used to sample the
@@ -290,9 +293,9 @@ public class ImageUndistortion{
 				{
 					for(int l = 0; l <= degree - k; l++)
 					{
-						// TODO
-						// TODO
-						// TODO
+						// TODO //calculate where undistorted point should be in distorted image
+						xDist.setAtIndex(x,y,(float)(xDist.getAtIndex(x, y)+u_vec.getElement(cc)*Math.pow(x, k)*Math.pow(y, l)));
+						yDist.setAtIndex(x,y,(float)(yDist.getAtIndex(x, y)+v_vec.getElement(cc)*Math.pow(x, k)*Math.pow(y, l)));
 					}
 				}
 			}
@@ -304,8 +307,11 @@ public class ImageUndistortion{
 		{
 			for(int j = 0; j < imSize; j++)
 			{
-				// TODO
-				// TODO
+
+				float val = InterpolationOperators.interpolateLinear(distortedImage, xDist.getAtIndex(i, j), yDist.getAtIndex(i, j));
+				undistortedImage.setAtIndex(i, j, yDist.getAtIndex(i,j));
+				undistortedImage.setAtIndex(i, j, val);
+				
 			}
 		}
 		undistortedImage.show("Undistorted Image");
