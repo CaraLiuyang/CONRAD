@@ -331,8 +331,8 @@ public class DefectPixelInterpolation {
 		
 				
 		//Load an image from file
-		String filename = "D:/02_lectures/DMIP/exercises/2014/3/testimg.bmp";
-		String filenameMask = "D:/02_lectures/DMIP/exercises/2014/3/mask.bmp";
+		String filename = "/proj/i5dmip/ap97alir/Reconstruction/CONRAD/src/edu/stanford/rsl/tutorial/dmip/testimg.bmp";
+		String filenameMask = "/proj/i5dmip/ap97alir/Reconstruction/CONRAD/src/edu/stanford/rsl/tutorial/dmip/mask.bmp";
 
 		Grid2D image = ImageUtil.wrapImagePlus(IJ.openImage(filename)).getSubGrid(0);
 		image.show("Ideal Input Image");
@@ -370,7 +370,11 @@ public class DefectPixelInterpolation {
 		int maxIter = 4000;
 		
 		//TODO
-		Grid2D spectralFiltered = new Grid2D(1,1);//TODO
+		
+		Grid2D spectralFiltered = dpi.interpolateSpectral(defectImage, mask, maxIter, zeroPadding);
+		
+		
+		spectralFiltered = new Grid2D(1,1);//TODO
 		spectralFiltered.show("Spectral Filtered Image");
 		
 		//show difference image |Spectral - Original|
